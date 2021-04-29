@@ -7,8 +7,11 @@ from datetime import datetime
 class Dictionary:
     url = 'http://tahlilgaran.org/TDictionary/WebApp/'
 
-    def user_search(self, word: str):
-        params = {'q': word, 's': '1'}
+    def search(self, word: str, is_word_search: bool = False):
+        if not is_word_search:
+            params = {'q': word, 's': '1'}
+        else:
+            params = {'q': word}
 
         r = requests.get(self.url, params=params)
 
@@ -45,18 +48,6 @@ class Dictionary:
             arr.append(x.get('name'))
 
         return 'word', arr
-
-    def word_search(self, word: str):
-        params = {'q': word}
-
-        r = requests.get(self.url, params=params)
-
-        if r.status_code == 200:
-            soup = bs(r.content, features='lxml')
-
-            results = soup.find_all('div', attrs={'id': 'ResultDiv'})[0]
-
-            return self.word(results)
 
     @staticmethod
     def pronounce_url(word: str):

@@ -2,8 +2,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 from dictionary import Dictionary
 
-# TODO Jesus Christ what is it with the second search? Combine That Shit with First One
-
 
 class Bot:
     def __init__(self):
@@ -20,7 +18,7 @@ class Bot:
 
     def dictionary(self, update: Update, context: CallbackContext) -> None:
         word = update.message.text.lower()
-        typ, result = self.d.user_search(word)
+        typ, result = self.d.search(word)
         if typ == 'word':
             text = ""
             for x in result:
@@ -46,12 +44,17 @@ class Bot:
         query = update.callback_query
         query.answer()
 
-        typ, result = self.d.word_search(query.data)
+        typ, result = self.d.search(query.data, is_word_search=True)
 
         text = ""
         for x in result:
             text = text + x + '\n'
-        query.edit_message_text(text)
+
+        if text:
+            query.edit_message_text(text)
+        else:
+            query.edit_message_text("IDK Why, But Bad Request\n\n"
+                                    "I Will Fix This Later")
 
     def main(self):
         updater = Updater('TOKEN', use_context=True)
