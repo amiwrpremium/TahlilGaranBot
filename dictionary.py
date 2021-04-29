@@ -8,7 +8,7 @@ class Dictionary:
     url = 'http://tahlilgaran.org/TDictionary/WebApp/'
 
     def user_search(self, word: str):
-        params = {'q': word}
+        params = {'q': word, 's': '1'}
 
         r = requests.get(self.url, params=params)
 
@@ -18,13 +18,12 @@ class Dictionary:
             results = soup.find_all('div', attrs={'id': 'ResultDiv'})[0]
 
             if results.contents[0].name == 'a':
-                self.word(results)
+                return self.word(results)
             else:
-                self.index(results)
+                return self.index(results)
 
     @staticmethod
     def index(results: bs):
-        print('index')
         result_contents = results.contents[1]
 
         dic = {}
@@ -36,19 +35,18 @@ class Dictionary:
             status.append(x.contents[1].text.strip())
             dic[x.contents[0].text.strip()] = x.contents[1].text.strip()
 
-        print(dic)
+        return 'index', dic
 
     @staticmethod
     def word(results: bs):
-        print('word')
         sections = results.find_all('a', attrs={'class': 'Tg_tb'})
         arr = []
         for x in sections:
             arr.append(x.get('name'))
 
-        print(arr)
+        return 'word', arr
 
-    def word_search(self, word):
+    def word_search(self, word: str):
         params = {'q': word}
 
         r = requests.get(self.url, params=params)
@@ -57,6 +55,8 @@ class Dictionary:
             soup = bs(r.content, features='lxml')
 
             results = soup.find_all('div', attrs={'id': 'ResultDiv'})[0]
+
+            return self.word(results)
 
     @staticmethod
     def pronounce_url(word: str):
