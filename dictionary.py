@@ -1,11 +1,14 @@
 import requests
 from bs4 import BeautifulSoup as bs
 from datetime import datetime
+import re
+
 # TODO add profanity filter
 
 
 class Dictionary:
     url = 'http://tahlilgaran.org/TDictionary/WebApp/'
+    pronounce_url_pattern = r'(?<=\(\')(.*?)(?=\'\))'
 
     def search(self, word: str, is_word_search: bool = False):
         if not is_word_search:
@@ -38,21 +41,30 @@ class Dictionary:
             status.append(x.contents[1].text.strip())
             dic[x.contents[0].text.strip()] = x.contents[1].text.strip()
 
-        return 'index', dic
+        return 'index', dic, None, None
 
-    @staticmethod
-    def word(results: bs):
+    def word(self, results: bs):
+        uk, us = self.get_pronounce_url(results)
         sections = results.find_all('a', attrs={'class': 'Tg_tb'})
         arr = []
         for x in sections:
             arr.append(x.get('name'))
 
-        return 'word', arr
+        return 'word', arr, uk, us
+
+    def get_pronounce_url(self, results: bs):
+        pronounce = results.find_all('p', attrs={'class': 'DivEnglishTitle'})[0].find_all('img')[1:]
+        uk = re.findall(self.pronounce_url_pattern, pronounce[0]['onclick'])[0]
+        us = re.findall(self.pronounce_url_pattern, pronounce[1]['onclick'])[0]
+
+        _uk = self.pronounce_url(uk)
+        _us = self.pronounce_url(us)
+
+        return _uk, _us
 
     @staticmethod
     def pronounce_url(word: str):
         if word.startswith('O_'):
-            _ = "O_uk_pron/n/nic/nice_/nice__gb_1"
             ox_dir = 'https://www.oxfordlearnersdictionaries.com/media/english/'
             return ox_dir + word[2:] + '.mp3'
 

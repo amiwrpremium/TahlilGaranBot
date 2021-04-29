@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
+
 from dictionary import Dictionary
 
 
@@ -18,12 +19,17 @@ class Bot:
 
     def dictionary(self, update: Update, context: CallbackContext) -> None:
         word = update.message.text.lower()
-        typ, result = self.d.search(word)
+        typ, result, uk, us = self.d.search(word)
         if typ == 'word':
-            text = ""
+            text = f"<b>{word}</b>\n\n"
+            keyboard = [
+                [InlineKeyboardButton('🇬🇧', url=uk), InlineKeyboardButton('🇺🇸', url=us)]
+            ]
+
             for x in result:
                 text = text + x + '\n'
-            update.message.reply_text(text)
+
+            update.message.reply_text(text, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
         else:
             text = "Choose: "
             keyboard = []
@@ -44,14 +50,18 @@ class Bot:
         query = update.callback_query
         query.answer()
 
-        typ, result = self.d.search(query.data, is_word_search=True)
+        typ, result, uk, us = self.d.search(query.data, is_word_search=True)
 
-        text = ""
+        text = f"<b>{query.data}</b>\n\n"
+        keyboard = [
+            [InlineKeyboardButton('🇬🇧', url=uk), InlineKeyboardButton('🇺🇸', url=us)]
+        ]
+
         for x in result:
             text = text + x + '\n'
 
         if text:
-            query.edit_message_text(text)
+            query.edit_message_text(text, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
         else:
             query.edit_message_text("IDK Why, But Bad Request\n\n"
                                     "I Will Fix This Later")
