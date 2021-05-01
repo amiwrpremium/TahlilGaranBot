@@ -48,7 +48,7 @@ class Dictionary:
         sections = results.find_all('a', attrs={'class': 'Tg_tb'})
         arr = []
         for x in sections:
-            arr.append(x.get('name'))
+            arr.append(x.get('name')[3:].title())
 
         return 'word', arr, uk, us
 

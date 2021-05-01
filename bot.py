@@ -5,15 +5,16 @@ from dictionary import Dictionary
 
 import re
 
+BASE_URL = 'http://tahlilgaran.org/TDictionary/WebApp/'
+
+
+def is_eng(word) -> bool:
+    return re.match(r'^[a-zA-Z]+\Z', word) is not None
+
 
 class Bot:
     def __init__(self):
-        self.d = Dictionary()
         self.main()
-
-    @staticmethod
-    def is_eng(word) -> bool:
-        return re.match(r'^[a-zA-Z]+\Z', word) is not None
 
     @staticmethod
     def start_command(update: Update, context: CallbackContext) -> None:
@@ -23,11 +24,12 @@ class Bot:
     def help_command(update: Update, context: CallbackContext) -> None:
         update.message.reply_text('Help')
 
-    def dictionary(self, update: Update, context: CallbackContext) -> None:
+    @staticmethod
+    def dictionary(update: Update, context: CallbackContext) -> None:
         word = update.message.text.lower()
 
-        if self.is_eng(word):
-            typ, result, uk, us = self.d.search(word)
+        if is_eng(word):
+            typ, result, uk, us = dictionary.search(word)
             if typ == 'word':
                 text = f"<b>{word}</b>\n\n"
                 keyboard = [
@@ -58,16 +60,20 @@ class Bot:
             update.message.reply_text('Invalid Input\n\n'
                                       '<i>(Persian Translation Is Not Supported Yet)</i>', parse_mode='HTML')
 
-    def callback_handler(self, update: Update, context: CallbackContext) -> None:
+    @staticmethod
+    def callback_handler(update: Update, context: CallbackContext) -> None:
         query = update.callback_query
         query.answer()
 
-        typ, result, uk, us = self.d.search(query.data, is_word_search=True)
+        typ, result, uk, us = dictionary.search(query.data, is_word_search=True)
 
-        text = f"<b>{query.data}</b>\n\n"
-        keyboard = [
-            [InlineKeyboardButton('🇬🇧', url=uk), InlineKeyboardButton('🇺🇸', url=us)]
-        ]
+        text = f"✍️ <b>{query.data}</b>\n\n"
+        keyboard = []
+
+        if uk and us:
+            keyboard.append([InlineKeyboardButton('🇬🇧', url=uk), InlineKeyboardButton('🇺🇸', url=us)])
+
+        keyboard.append([InlineKeyboardButton('🌐 Read More', url=f'{BASE_URL}?q={query.data}')])
 
         for x in result:
             text = text + x + '\n'
@@ -92,4 +98,5 @@ class Bot:
 
 
 if __name__ == '__main__':
+    dictionary = Dictionary()
     Bot()
